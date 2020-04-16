@@ -1,0 +1,54 @@
+# Completion for odoo-bin
+#
+# USAGE = odoo-bin -d $database -u $module --stop-after-init  # Update module
+#         odoo-bin -d $database -i $module --stop-after-init  # Install module
+#         odoo-bin shell -d $database                         # Python cosole to database
+
+# Owner of databases
+db_owner="odoo10"
+
+_odoo-bin()
+{
+    local cur prev
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [ $COMP_CWORD -eq 1 ]; then
+         COMPREPLY=( $(compgen -W '-d shell' -- ${cur}) )
+       
+    fi
+
+    if [[ $COMP_CWORD -eq 2 && ${COMP_WORDS[1]} == 'shell' ]]; then
+         COMPREPLY=( $(compgen -W '-d' -- ${cur}) )
+    fi
+
+    if [[ $COMP_CWORD -eq 3 && ${COMP_WORDS[1]} == 'shell' ]]; then
+         odoo_db=$(psql postgres -t -c "SELECT pg_database.datname, pg_user.usename FROM pg_database, pg_user WHERE pg_database.datdba = pg_user.usesysid;" | grep $db_owner | cut -d "|" -f1)
+         COMPREPLY=( $(compgen -W "${odoo_db}" -- ${cur}) )
+    fi
+
+    if [[ $COMP_CWORD -eq 2 && ${COMP_WORDS[1]} == '-d' ]]; then
+         odoo_db=$(psql postgres -t -c "SELECT pg_database.datname, pg_user.usename FROM pg_database, pg_user WHERE pg_database.datdba = pg_user.usesysid;" | grep $db_owner | cut -d "|" -f1)
+         COMPREPLY=( $(compgen -W "${odoo_db}" -- ${cur}) )
+    fi
+
+    if [[ $COMP_CWORD -eq 3 && ${COMP_WORDS[1]} == '-d' ]]; then
+         COMPREPLY=( $(compgen -W '-u -i' -- ${cur}) )
+    fi
+
+    if [[ $COMP_CWORD -eq 4 && ${COMP_WORDS[1]} == '-d' && ${COMP_WORDS[3]} == '-u' ]]; then
+         modules=$(psql -d ${COMP_WORDS[2]} -t -c "SELECT name FROM ir_module_module WHERE state = 'installed';")
+         COMPREPLY=( $(compgen -W "${modules}" -- ${cur}) )
+    fi
+
+    if [[ $COMP_CWORD -eq 4 && ${COMP_WORDS[1]} == '-d' && ${COMP_WORDS[3]} == '-i' ]]; then
+         modules=$(psql -d ${COMP_WORDS[2]} -t -c "SELECT name FROM ir_module_module WHERE state = 'uninstalled';")
+         COMPREPLY=( $(compgen -W "${modules}" -- ${cur}) )
+    fi
+
+    if [[ $COMP_CWORD -eq 5 && ${COMP_WORDS[1]} == '-d' ]]; then
+         COMPREPLY=( $(compgen -W '--stop-after-init' -- ${cur}) )
+    fi
+}
+complete -F _odoo-bin odoo-bin
