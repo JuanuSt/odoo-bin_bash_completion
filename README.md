@@ -12,7 +12,7 @@ alias odoo-bin="/path/to/odoo-bin "
 Observe the blank space at the end.
 
 After copying the bash completion file to /etc/bash_completion.d directory and source your shell you can use TAB:
-- After odoo-bin command to chose between -d or shell options.
+- After **odoo-bin** command to chose between -d or shell options.
 - After **-d/shell** to chose among owner's databases.
 - After **-d $database** to chose between -i (install) or -u (update) a module.
 - After **-d $database -u** to chose among the modules installed in this $database.
